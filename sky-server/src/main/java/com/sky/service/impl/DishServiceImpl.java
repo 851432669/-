@@ -99,13 +99,37 @@ public class DishServiceImpl implements DishService {
         }
         //删除菜品表中的菜品数据
 
-        for (Long id : ids) {
-            dishMapper.deleteById(id);
-            //删除菜品关联的口味数据
-            dishFlavorMapper.deleteByDishId(id);
-        }
-        //删除菜品关联的口味数据
+        //每一次遍历都会发出两条sql语句  语句太多---性能问题
+//        for (Long id : ids) {
+//            dishMapper.deleteById(id);
+//            //删除菜品关联的口味数据
+//            dishFlavorMapper.deleteByDishId(id);
+//        }
+        //根据菜品集合 批量删除菜品数据和关联的口味数据
+        //sql: delete  from dish where id in (?,?,?)
+
+        dishMapper.deleteByIds(ids);
+        //根据菜品集合 批量删除菜品关联的口味数据
+        //sql: delete from dish_flavor where dish_id in (?,?,?)
+        dishFlavorMapper.deleteByDishIds(ids);
+    }
 
 
+
+    /**
+     * 根据Id查询对应的菜品和口味数据
+     * @return
+     */
+    public DishVO getByIdWithFlavor(Long id) {
+        //根据id查询菜品数据
+        Dish dish = dishMapper.getById(id);
+        //根据菜品id查询口味数据
+        List<DishFlavor> dishFlavors = dishFlavorMapper.getByDishId(id);
+        //将查询到的数据封装到VO
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish,dishVO);
+        dishVO.setFlavors(dishFlavors);
+
+        return dishVO;
     }
 }
